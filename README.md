@@ -6,7 +6,7 @@ Quick setup guide to get your Instagram scraper running.
 
 - Python 3.7 or higher
 - Internet connection
-- Instagram account (optional but recommended)
+- Instagram account login (Mandatory) on terminal during scrapt running
 
 ## Step-by-Step Setup
 
@@ -25,7 +25,7 @@ myenv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-### 3. Set Up Credentials (Optional)
+### 3. Set Up Credentials (Mandatory)
 
 For better scraping access, create a `.env` file:
 
@@ -64,7 +64,7 @@ target_usernames = ["nasa", "spacex", "esa"]  # Add your target accounts
 
 Edit `instagram_scrap.py` lines ~151-152:
 ```python
-max_posts = 5              # Posts per account
+max_posts = 5              # Posts per account 
 delay_between_posts = 5    # Seconds between requests
 ```
 
@@ -88,6 +88,5 @@ Check `generated_files/` for the Excel report.
 
 - `.env` - Your credentials (don't commit this)
 - `generated_files/instagram_report_*.xlsx` - Scraped data
-- `session-*` - Login session (auto-created)
 
 That's it! Your scraper is ready to use.

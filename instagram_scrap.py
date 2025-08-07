@@ -6,6 +6,11 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 
+# Adjust column width and wrap text using openpyxl
+import openpyxl
+from openpyxl.styles import Alignment
+
+
 load_dotenv()
 
 # Set up logging
@@ -41,6 +46,7 @@ def login_to_instagram(username=None, password=None):
         else:
             logger.warning("No credentials. Running in anonymous mode.")
             return False
+
 
 
 
@@ -107,17 +113,6 @@ def scrape_account_data(username, max_posts=100, delay_between_posts=3):
                     'Hashtags': hashtags,
                 }
 
-                # Fetch comments (optional - can be slow)
-                # try:
-                #     comments = []
-                #     for comment in post.get_comments():
-                #         comments.append(f"{comment.owner.username}: {comment.text}")
-                #         if len(comments) >= 10:  # Limit comments to avoid rate limits
-                #             break
-                #     post_info['Comments'] = "\n".join(comments)
-                # except Exception as e:
-                #     logger.warning(f"Could not fetch comments for post {post.shortcode}: {e}")
-                #     post_info['Comments'] = "Unavailable"
 
                 posts_data.append(post_info)
                 count += 1
@@ -128,8 +123,7 @@ def scrape_account_data(username, max_posts=100, delay_between_posts=3):
                 time.sleep(delay_between_posts)  # Rate limiting
                 
             except Exception as e:
-                logger.error(f"Error processing post {count}: {e}")
-                continue
+                logger.error(f"Unexpected error: {e}")
                 
     except Exception as e:
         logger.error(f"Error fetching posts: {e}")
@@ -137,8 +131,10 @@ def scrape_account_data(username, max_posts=100, delay_between_posts=3):
     logger.info(f"Successfully processed {len(posts_data)} posts")
     return data, posts_data
 
+
+
 def export_to_excel(all_accounts_data, all_posts_data_by_user, filename=None):
-    """Export multiple users' data to Excel with separate sheets for posts/comments"""
+    """Export multiple users' data to Excel with custom column width and text wrapping."""
     if not filename:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f'generated_files/instagram_report_{timestamp}.xlsx'
@@ -152,10 +148,18 @@ def export_to_excel(all_accounts_data, all_posts_data_by_user, filename=None):
             # Add each user's posts/comments to a separate sheet
             for username, posts_data in all_posts_data_by_user.items():
                 sheet_name = f"{username}_Posts"
-                # Ensure Excel sheet name length doesn't exceed 31 characters
                 sheet_name = sheet_name[:31]
                 posts_df = pd.DataFrame(posts_data)
                 posts_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        wb = openpyxl.load_workbook(filename)
+        for ws in wb.worksheets:
+            for col in ws.columns:
+                col_letter = col[0].column_letter
+                ws.column_dimensions[col_letter].width = 50
+                for cell in col:
+                    cell.alignment = Alignment(wrap_text=True)
+        wb.save(filename)
 
         logger.info(f"Successfully exported data to {filename}")
         return filename
@@ -171,7 +175,8 @@ def main():
     login_success = login_to_instagram()
 
     # List of usernames to scrape
-    target_usernames = ["nasa"]
+    # target_usernames = ["nasa", "nike", "cristiano", "selenagomez", "adidas", "virat.kohli", "kimkardashian", "therock", "kyliejenner", "9gag"]
+    target_usernames = ["nasa", "nike"]
     max_posts = 5
     delay_between_posts = 5
 
